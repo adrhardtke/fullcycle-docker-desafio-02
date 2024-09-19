@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  app:
+    image: node:22-alpine
+    container_name: app
+    working_dir: /usr/src/app
+    restart: always
+    ports: 
+      - "3000:3000"
+    networks:
+      - challenge_net
+    command: npm run dev
+    volumes:
+      - .:/usr/src/app
+
+  nginx:
+    container_name: nginx
+    build: 
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - 8080:80
+    networks:
+      - challenge_net
+    depends_on:
+      - app
+
+  database:
+    image: mysql:9.0
+    container_name: database
+    command: --innodb-use-native-aio=0
+    restart: always
+    tty: true
+    ports:
+      - 3306:3306
+    volumes:
+      - ./database:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=challenge
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - challenge_net
+
+
+networks:
+  challenge_net:
+    driver: bridge
